@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title>AWS cognito 1 demo</title>
+		<style>
+			#appSection {
+
+			}
+
+			main {
+				display: flex;
+				flex-direction: row;
+				white-space: pre;
+				row-gap: 10px;
+			}
+
+			main > * {
+				border: 1px solid black;
+			}
+
+			#userInfo {
+				width: min-content;
+			}
+
+			#gql {
+				display: flex;
+				flex-direction: column;
+			}
+			#gql textarea {
+				min-width: 500px;
+				height: 350px;
+				padding: 5px;
+			}
+			#gqlResult {
+				padding: 5px;
+			}
+		</style>
+	</head>
+
+<body>
+	<section id="appSection">
+		<a id="logoutLink" href=="#">logout</a> this is app content
+		<button id="refreshAuthToken">refreshAuthToken</button>
+		<main>
+			<section id="userInfo">user info</section>
+			<section id="gql">
+				<select id="authMethod">
+					<option value="none">----------</option>
+					<option value="accessToken">Access token</option>
+					<option value="apiKey" data-key="da2-tkhidfsh2vbynczxg3xccmk75u">API key</option>
+
+				</select>
+				<textarea id="gqlText">
+query MyQuery {
+  getDemo(id: "2bd831c7-8bda-4865-a127-90b929c31016") {
+    id
+    version
+    created
+  }
+  getDemos {
+    id
+    version
+    created
+  }
+}
+
+mutation  {
+  addDemo(input: { version: "4" }) {
+    id
+    version
+    created
+  }
+}
+
+</textarea>
+				<button id="gqlSend">SEND</button>
+				<p id="gqlResult"></p>
+			</section>
+		</main>
+	</section>
+</body>
+
+<script type="module">
+	/**
+	 * @todo revokeToken on login
+	 */
+
+	import { awsAuth } from './auth.mjs';
+	window.addEventListener('DOMContentLoaded', async () => {
+
+		const url = new URL(location.toString());
+		document.querySelector('#logoutLink').href = awsAuth.getLogoutUrl(); // set up logout URL
+
+		document.querySelector('#logoutLink').addEventListener('click', () => {
+			localStorage.removeItem('session'); // on logout link click, clear storage
+		});
+
+		// refresh auth token nad store it in
+		document.querySelector('#refreshAuthToken').addEventListener('click', async () => {
+			let session = window.localStorage.getItem('session') ?? null;
+			if (session) {
+				session = JSON.parse(session);
+				const refreshToken = await awsAuth.refreshAuthToken(session.refresh_token);
+				session = {
+					...refreshToken,
+					refresh_token: session.refresh_token,
+				}
+				window.localStorage.setItem('session', JSON.stringify(session));
+				checkLoginInfo();
+			} else {
+				logout();
+			}
+		});
+
+
+		// check for code in URL, if there is, do 2nd step of exchange (generate auth)
+		if ((url.searchParams.has('code'))) {
+			const result = await awsAuth.validateCode(url.searchParams.get('code'));
+			if (result) {
+				window.localStorage.setItem('session', JSON.stringify(result));
+				// history.pushState({}, "", '/'); // no reload, just remove code part
+				location.href = '/app.html'; // hard reload
+			}
+
+		} else {
+			checkLoginInfo();
+		}
+
+
+		document.querySelector('#gqlSend').addEventListener('click', sendGraphQL);
+
+	});
+
+	// do app logout (no auth logout though )
+	function logout() {
+		localStorage.removeItem('session');
+		location.href = '/'; // hard reload
+	}
+
+	// display info about auth
+	async function checkLoginInfo() {
+		let session = window.localStorage.getItem('session') ?? null;
+		if (session) {
+			try {
+				session = JSON.parse(session);
+				const user = await awsAuth.userInfo(session.access_token);
+				document.querySelector('#appSection #userInfo').textContent = JSON.stringify(user, null, 2) + '\n';
+				document.querySelector('#appSection #userInfo').textContent += parseSessionPart('id_token');
+				document.querySelector('#appSection #userInfo').textContent += parseSessionPart('access_token');
+			} catch (e) {
+				logout();
+			}
+		} else {
+			logout();
+		}
+
+	}
+
+	function parseSessionPart(part) {
+		let session = window.localStorage.getItem('session') ?? null;
+		const result = [];
+		if (session) {
+			session = JSON.parse(session);
+			const chunks = session[part].split('.');
+			const header = JSON.parse(atob(chunks[0]));
+			const payload = JSON.parse(atob(chunks[1]));
+			result.push('---------------------------------------');
+			result.push(`${part} (${new Date(payload.exp * 1000)})`);
+			result.push(`header: ${JSON.stringify(header, null, 2)}`);
+			result.push(`payload: ${JSON.stringify(payload, null, 2)}`);
+			result.push('---------------------------------------');
+		}
+		return result.join('\n');
+	}
+
+	/******************************************************/
+	/******************************************************/
+	/******************************************************/
+	// da2-jnrkahbvprcmpfwbjduy3ngaci
+
+
+	function getAccessToken() {
+		let session = window.localStorage.getItem('session') ?? null;
+		if (session) {
+			try {
+				return JSON.parse(session).access_token;
+			} catch (e) {
+				return '';
+			}
+		}
+		return '';
+	}
+
+	function getAuthHeader() {
+		const authSelect = document.querySelector('#authMethod');
+		const authType = authSelect.value;
+		if (authType === 'accessToken') {
+			return {
+				'Authorization': getAccessToken(),
+			}
+		} else if (authType === 'apiKey') {
+			return {
+				'x-api-key': authSelect.options[authSelect.selectedIndex].dataset.key,
+			}
+		}
+		return {};
+	}
+
+/*
+				<select id="authMethod">
+					<option value="accessToken">Access token</option>
+					<option value="apiKey" data-key="da2-jnrkahbvprcmpfwbjduy3ngaci">API key</option>
+
+				</select>
+*/
+
+	async function sendGraphQL() {
+		let accessToken = getAccessToken();
+
+
+		const query = document.querySelector('#gqlText').value;
+		const result = await fetch('https://3mrsdwetsraxpdofigdt7xs4bm.appsync-api.eu-central-1.amazonaws.com/graphql', {
+			method: 'POST',
+			headers: {
+				...getAuthHeader(),
+			},
+			body: JSON.stringify({
+				query
+			}),
+		});
+
+		document.querySelector('#gqlResult').textContent = JSON.stringify(await result.json(), null, 2);
+	}
+</script>
+
+</html>

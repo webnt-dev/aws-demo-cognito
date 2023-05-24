@@ -1,0 +1,78 @@
+{
+  "root": true,
+  "extends": [
+    "airbnb-base",
+    "airbnb-typescript"
+  ],
+  "parserOptions": {
+    "project": ["./tsconfig.json"], // Specify it only for TypeScript files
+		"tsconfigRootDir": "./aws"
+  },
+  "ignorePatterns": ["**/*.d.ts"],
+
+  "rules": {
+    "class-methods-use-this": ["off"],
+    "function-paren-newline": ["error", "consistent"],
+    "import/extensions": ["error", "always"],
+    "import/no-extraneous-dependencies": ["off"],
+    "import/prefer-default-export": ["off"],
+    "linebreak-style": "off",
+    "max-classes-per-file": ["off"],
+    "max-len": ["error", 180, 2, {
+      "ignoreUrls": true,
+      "ignoreComments": true,
+      "ignoreRegExpLiterals": true,
+      "ignoreStrings": true,
+      "ignoreTemplateLiterals": true,
+    }],
+    "no-console":"off",
+    "no-multiple-empty-lines": ["error", { "max": 2, "maxEOF": 0 }],
+    "no-param-reassign": ["off"],
+    "no-restricted-syntax": [
+      "error",
+      {
+        "selector": "ForInStatement",
+        "message": "for..in loops iterate over the entire prototype chain, which is virtually never what you want. Use Object.{keys,values,entries}, and iterate over the resulting array.",
+      },
+      // {
+      //  "selector": "ForOfStatement",
+      //  "message": "iterators/generators require regenerator-runtime, which is too heavyweight for this guide to allow them. Separately, loops should be avoided in favor of array iterations.",
+      // },
+      {
+        "selector": "LabeledStatement",
+        "message": "Labels are a form of GOTO; using them makes code confusing and hard to maintain and understand.",
+      },
+      {
+        "selector": "WithStatement",
+        "message": "`with` is disallowed in strict mode because it makes code impossible to predict and optimize.",
+      },
+    ],
+		"no-tabs": "off",
+    "no-underscore-dangle": "off",
+    "object-curly-newline": ["error", { "minProperties": 7, "consistent": true,  }],
+    "object-property-newline": ["error", { "allowAllPropertiesOnSameLine": true, }],
+    "operator-linebreak": ["warn", "after"],
+    "padded-blocks": ["off"],
+    "prefer-destructuring": ["off"],
+    "react/jsx-filename-extension": "off",
+
+    "@typescript-eslint/no-use-before-define": ["off"],
+    "@typescript-eslint/indent": ["error", "tab"],
+    "@typescript-eslint/brace-style": ["error", "1tbs", { "allowSingleLine": true }],
+    "@typescript-eslint/no-empty-function": ["error", { "allow": ["constructors"] }],
+
+    "@typescript-eslint/no-unused-vars": ["off"]
+
+
+  },
+
+
+	"overrides": [
+		{
+			"extends": [
+				"plugin:@aws-appsync/base"
+			],
+			"files":["./src/resolvers/**/*.js"]
+		}
+	]
+}

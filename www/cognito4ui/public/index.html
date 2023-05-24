@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title>AWS cognito 1 demo</title>
+		<style>
+			#appSection,
+			.hidden {
+				display: none;
+			}
+
+			#appSection p {
+				white-space: pre;
+			}
+
+
+			.block {
+				display: block;
+			}
+		</style>
+	</head>
+
+<body>
+	<section id="loginSection"><a id="loginLink" href=="#">login</a></section>
+</body>
+
+<script type="module">
+	import { awsAuth } from './auth.mjs';
+	window.addEventListener('DOMContentLoaded', async () => {
+		document.querySelector('#loginLink').href = awsAuth.getLoginUrl(); // just generate link to Cognito hosted login form
+	});
+</script>
+
+</html>

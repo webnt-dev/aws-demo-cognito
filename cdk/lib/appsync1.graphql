@@ -1,0 +1,23 @@
+type Demo {
+	id: String!
+	version: String!
+	created: AWSDateTime!
+}
+
+type Query {
+	getDemos: [ Demo! ]
+	getDemo(id: String!): Demo
+}
+
+input DemoInput {
+	version: String!
+}
+
+type Mutation {
+	addDemo(input: DemoInput!): Demo
+}
+
+schema {
+	query: Query
+	mutation: Mutation
+}

@@ -1,0 +1,28 @@
+# can be called by any user and by API key
+type Demo @aws_api_key @aws_iam @aws_cognito_user_pools {
+	id: String!
+	version: String!
+	# this property can only be requested by logged user
+	created: AWSDateTime! @aws_cognito_user_pools
+}
+
+type Query {
+	getDemos: [ Demo! ] @aws_iam @aws_cognito_user_pools
+
+	# can be called by any user and by API key
+	getDemo(id: String!): Demo @aws_api_key @aws_cognito_user_pools
+}
+
+input DemoInput {
+	version: String!
+}
+
+# only user from those 2 groups can call that action
+type Mutation {
+	addDemo(input: DemoInput!): Demo @aws_cognito_user_pools(cognito_groups: ["admin-group", "writer-group"])
+}
+
+schema {
+	query: Query
+	mutation: Mutation
+}

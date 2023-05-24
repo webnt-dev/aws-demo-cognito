@@ -1,0 +1,42 @@
+{
+  "name": "cognito1api",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "all": "eslint --fix -c .eslintrc  --parser-options tsconfigRootDir: ./src/**/*.mts && tsc && rollup -c",
+    "build": "tsc",
+    "lint": "eslint -c .eslintrc --parser-options tsconfigRootDir: ./src/**/*.mts",
+    "lint-fix": "eslint --fix -c .eslintrc ./src/**/*",
+    "rollup": "rollup -c",
+    "start": "web-dev-server"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@rollup/plugin-commonjs": "^25.0.0",
+    "@rollup/plugin-json": "^6.0.0",
+    "@rollup/plugin-node-resolve": "^15.0.2",
+    "@types/node": "^20.1.7",
+    "@typescript-eslint/eslint-plugin": "^5.59.6",
+    "@typescript-eslint/parser": "^5.59.6",
+    "@web/dev-server": "^0.2.1",
+    "@web/rollup-plugin-html": "^2.0.0",
+    "eslint": "^8.40.0",
+    "eslint-config-airbnb-base": "^15.0.0",
+    "eslint-config-airbnb-typescript": "^17.0.0",
+    "eslint-import-resolver-typescript": "^3.5.5",
+    "rollup": "^3.22.0",
+    "rollup-plugin-copy": "^3.4.0",
+    "rollup-plugin-summary": "^2.0.0",
+    "rollup-terser": "^1.0.3",
+    "typescript": "^5.0.4"
+  },
+  "dependencies": {
+    "@aws-sdk/client-cognito-identity-provider": "^3.332.0",
+    "@aws-sdk/credential-providers": "^3.335.0",
+    "aws-cognito-srp-client": "^1.0.0"
+  }
+}
