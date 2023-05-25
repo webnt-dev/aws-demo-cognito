@@ -33,9 +33,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
 		const client = new CognitoIdentityProvider({ region: 'eu-central-1' });
 
-		// PLAIN PASSWORD
+		// PLAIN PASSWORD transport
 		try {
 			plainLog('start initiateAuth');
+			// login is done using 1 call
 			const result = await client.initiateAuth({
 				AuthFlow: AuthFlowType.USER_PASSWORD_AUTH,
 				ClientId: clientId,
@@ -45,7 +46,7 @@ document.addEventListener('DOMContentLoaded', () => {
 				}
 			});
 			plainLog(result);
-			if (result.$metadata.httpStatusCode === 200) {
+			if (result.$metadata.httpStatusCode === 200) { // if success
 				plainLog('get user');
 				let user = await client.getUser({
 					AccessToken: result.AuthenticationResult!.AccessToken
@@ -55,17 +56,6 @@ document.addEventListener('DOMContentLoaded', () => {
 				plainLog('revoke token');
 
 				// IF YOU HAVE IDENTITY
-				// const identityClient = new CognitoIdentityProvider({
-				// 	region: 'eu-central-1',
-				// 	credentials: fromCognitoIdentity({
-				// 		identityId: ,
-				// 		clientConfig: {
-				// 			region: 'eu-central-1',
-				// 		}
-				// 	}),
-				// });
-
-				// IF YOU HAVE IDENTITY POOL
 				// // const identityClient = new CognitoIdentityProvider({
 				// // 	credentials: fromCognitoIdentityPool({
 				// // 		clientConfig: {
@@ -77,16 +67,18 @@ document.addEventListener('DOMContentLoaded', () => {
 				// await identityClient.revokeToken({
 				// 	ClientId: clientId,
 				// 	Token: result.AuthenticationResult!.RefreshToken!,
-
 				// });
+
+
+				// revoking token
 				await revokeToken(result.AuthenticationResult!.RefreshToken!, clientId);
 
 				plainLog('get user 2');
+				// will fail, token has been revoked
 				user = await client.getUser({
 					AccessToken: result.AuthenticationResult!.AccessToken
 				});
 				plainLog(user);
-
 			}
 
 		} catch (e) {
@@ -104,6 +96,8 @@ document.addEventListener('DOMContentLoaded', () => {
 			const srpA = srp.getA();
 
 			srpLog('start initiateAuth');
+			// we must implement SRP protocol
+			// get challenge token....
 			const result2 = await client.initiateAuth({
 				AuthFlow: AuthFlowType.USER_SRP_AUTH,
 				ClientId: clientId,
@@ -114,6 +108,7 @@ document.addEventListener('DOMContentLoaded', () => {
 			});
 			srpLog(result2);
 
+			// ...compute SRP response
 			const { signature, timestamp } = srp.getSignature(
 				result2.ChallengeParameters!.USER_ID_FOR_SRP,
 				result2.ChallengeParameters!.SRP_B,
@@ -123,6 +118,7 @@ document.addEventListener('DOMContentLoaded', () => {
 			);
 
 			srpLog('start respondToAuthChallenge');
+			// ...send SRP response
 			const result3 = await client.respondToAuthChallenge({
 				ChallengeName: ChallengeNameType.PASSWORD_VERIFIER,
 				ClientId: clientId,
@@ -140,6 +136,16 @@ document.addEventListener('DOMContentLoaded', () => {
 				AccessToken: result3.AuthenticationResult!.AccessToken
 			});
 			srpLog(user2);
+
+			srpLog('revoke token');
+			await revokeToken(result3.AuthenticationResult!.RefreshToken!, clientId);
+
+			srpLog('get user 2');
+			// will faile, token has been revoked
+			const user = await client.getUser({
+				AccessToken: result3.AuthenticationResult!.AccessToken
+			});
+			srpLog(user);
 		} catch (e) {
 			if (e instanceof Error) {
 				srpLog(`${e.name}: ${e.message}`); // eslint-disable-line
@@ -153,6 +159,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 });
 
+// Function to revoke token using oAuth
 async function revokeToken(refreshToken: string, clientId: string) {
 	const res = await fetch('https://asw-demo-cogniot1.auth.eu-central-1.amazoncognito.com/oauth2/revoke', {
 		method: 'POST',

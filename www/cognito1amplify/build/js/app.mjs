@@ -1,8 +1,4 @@
 import { Amplify, Auth } from 'aws-amplify';
-/*
-        const userPoolId = 'eu-central-1_4u2gXoFrj';
-        const clientId = '6p02voe9059mb4asr4h0nsu0im';
-*/
 Amplify.configure({
     Auth: {
         // // REQUIRED only for Federated Authentication - Amazon Cognito Identity Pool ID
@@ -58,6 +54,7 @@ Amplify.configure({
         // },
     },
 });
+// Function using Auth.signIn method from Amplify
 async function signIn(username, password) {
     try {
         return await Auth.signIn(username, password);
@@ -86,8 +83,10 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         else {
             log(result);
-            Auth.signOut();
-            log(result);
+            log('Sign OUT');
+            // sign user out automatically
+            const sout = await Auth.signOut();
+            log(sout);
         }
     });
 });

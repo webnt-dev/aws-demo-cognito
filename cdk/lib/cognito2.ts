@@ -250,8 +250,5 @@ export class Cognito2Stack extends cdk.Stack {
       exportName: 'cognito2-userPool2-unauthRole',
     });
 
-
-
-
   }
 }
