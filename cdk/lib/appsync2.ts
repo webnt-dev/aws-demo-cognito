@@ -9,18 +9,18 @@ export class AppSync2Stack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
 
+		// Create AppSync
 		const api = new appsync.GraphqlApi(this, 'Api', {
 			name: 'demoAppSync2',
-			schema: appsync.SchemaFile.fromAsset(path.join(__dirname, 'appsync2.graphql')),
-			authorizationConfig: {
+			schema: appsync.SchemaFile.fromAsset(path.join(__dirname, 'appsync2.graphql')), // GraphQL schema
+			authorizationConfig: { // how is call authenticated
 				defaultAuthorization: {
-					// authorizationType: appsync.AuthorizationType.IAM,
 					authorizationType: appsync.AuthorizationType.USER_POOL,
 					userPoolConfig: {
 						userPool: cognito.UserPool.fromUserPoolArn(this, 'userPool2', cdk.Fn.importValue('cognito2-userPool2'))
 					}
 				},
-				additionalAuthorizationModes: [
+				additionalAuthorizationModes: [ // additional authentication using API key and IAM role
 					{
 						authorizationType: appsync.AuthorizationType.API_KEY,
 						apiKeyConfig: {
@@ -37,19 +37,13 @@ export class AppSync2Stack extends cdk.Stack {
 			xrayEnabled: true,
 		});
 
+		// get IAM role exported from Cognito2 stack for unauthenticate users
 		const unauthRole = iam.Role.fromRoleArn(this, 'unauthRole', cdk.Fn.importValue('cognito2-userPool2-unauthRole'));
 
+		// allow unauthenticate user to call one question
 		api.grantQuery(unauthRole, 'getDemos');
-		// api.grant(role, appsync.IamResource.custom('types/Mutation/fields/updateExample'), 'appsync:GraphQL');
-		// api.grant(role, appsync.IamResource.ofType('Mutation', 'updateExample'), 'appsync:GraphQL');
 
-
-		// const apiKey = new appsync.CfnApiKey(this, 'apiKey1', {
-		// 	apiId: api.apiId,
-		// 	description: 'Testing key',
-		// 	expires: Date.parse('2024-01-01T00:00:00.000Z') / 1000,
-		// });
-
+		// DynamoDB table
 		const demoTable = new dynamodb.Table(this, 'DemoTableAppSync2', {
 			partitionKey: {
 				name: 'id',
@@ -58,6 +52,7 @@ export class AppSync2Stack extends cdk.Stack {
 			billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
 		});
 
+		// Policy to perform certain action on DynamoDB table
 		const tablePolicy = new iam.ManagedPolicy(
 			this, 'DynamoDBPolicy', {
 				path: '/appsync/',
@@ -77,11 +72,13 @@ export class AppSync2Stack extends cdk.Stack {
 			}
 		);
 
+		// Role, that can be assigned to AppSync, that has policy defined above
 		const demoDSRole = new iam.Role(this, 'AppsyncRole', {
 			assumedBy: new iam.ServicePrincipal('appsync.amazonaws.com'),
 			managedPolicies: [tablePolicy],
 		});
 
+		// AppSync DataSource
 		const demoDS = new appsync.DynamoDbDataSource(this, 'demoDataSource', {
 			table: demoTable,
 			api,
@@ -103,6 +100,7 @@ export class AppSync2Stack extends cdk.Stack {
 			responseMappingTemplate: appsync.MappingTemplate.dynamoDbResultList(),
 		});
 
+		// Resolver for the Query "getDemo" that gets one item from the DynamoDb table based on id
 		demoDS.createResolver('QueryGetDemoResolver', {
 			typeName: 'Query',
 			fieldName: 'getDemo',
@@ -119,6 +117,7 @@ export class AppSync2Stack extends cdk.Stack {
 			// 	appsync.PrimaryKey.partition('id').auto(),
 			// 	appsync.Values.projecting('input'),
 			// ),
+			// but we want to add additional field - created
 			requestMappingTemplate: appsync.MappingTemplate.fromString(`
 			{
 				"version" : "2018-05-29",
@@ -136,12 +135,5 @@ export class AppSync2Stack extends cdk.Stack {
 		});
 
 
-/*
-		new cdk.CfnOutput(this, 'cognito2-userPool2-unauthRole', {
-      value: cognitoIdP.unauthenticatedRole.roleArn,
-      description: 'Ident pool unauthenticated role ARN',
-      exportName: 'cognito2-userPool2-unauthRole',
-    });
-*/
 	}
 }

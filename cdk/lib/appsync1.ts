@@ -9,12 +9,12 @@ export class AppSync1Stack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
 
+		// Create AppSync
 		const api = new appsync.GraphqlApi(this, 'Api', {
 			name: 'demo',
-			schema: appsync.SchemaFile.fromAsset(path.join(__dirname, 'appsync1.graphql')),
-			authorizationConfig: {
+			schema: appsync.SchemaFile.fromAsset(path.join(__dirname, 'appsync1.graphql')), // GraphQL schema
+			authorizationConfig: { // how is call authenticated
 				defaultAuthorization: {
-					// authorizationType: appsync.AuthorizationType.IAM,
 					authorizationType: appsync.AuthorizationType.USER_POOL,
 					userPoolConfig: {
 						userPool: cognito.UserPool.fromUserPoolArn(this, 'userPool1', cdk.Fn.importValue('cognito1-userPool'))
@@ -24,6 +24,7 @@ export class AppSync1Stack extends cdk.Stack {
 			xrayEnabled: true,
 		});
 
+		// DynamoDB table
 		const demoTable = new dynamodb.Table(this, 'DemoTable', {
 			partitionKey: {
 				name: 'id',
@@ -32,6 +33,7 @@ export class AppSync1Stack extends cdk.Stack {
 			billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
 		});
 
+		// Policy to perform certain action on DynamoDB table
 		const tablePolicy = new iam.ManagedPolicy(
 			this, 'DynamoDBPolicy', {
 				path: '/appsync/',
@@ -51,11 +53,13 @@ export class AppSync1Stack extends cdk.Stack {
 			}
 		);
 
+		// Role, that can be assigned to AppSync, that has policy defined above
 		const demoDSRole = new iam.Role(this, 'AppsyncRole', {
 			assumedBy: new iam.ServicePrincipal('appsync.amazonaws.com'),
 			managedPolicies: [tablePolicy],
 		});
 
+		// AppSync DataSource
 		const demoDS = new appsync.DynamoDbDataSource(this, 'demoDataSource', {
 			table: demoTable,
 			api,
@@ -77,6 +81,8 @@ export class AppSync1Stack extends cdk.Stack {
 			responseMappingTemplate: appsync.MappingTemplate.dynamoDbResultList(),
 		});
 
+
+		// Resolver for the Query "getDemo" that gets one item from the DynamoDb table based on id
 		demoDS.createResolver('QueryGetDemoResolver', {
 			typeName: 'Query',
 			fieldName: 'getDemo',
@@ -93,6 +99,7 @@ export class AppSync1Stack extends cdk.Stack {
 			// 	appsync.PrimaryKey.partition('id').auto(),
 			// 	appsync.Values.projecting('input'),
 			// ),
+			// but we want to add additional field - created
 			requestMappingTemplate: appsync.MappingTemplate.fromString(`
 			{
 				"version" : "2018-05-29",
@@ -108,16 +115,5 @@ export class AppSync1Stack extends cdk.Stack {
 			`),
 			responseMappingTemplate: appsync.MappingTemplate.dynamoDbResultItem(),
 		});
-
-
-
-		// //To enable DynamoDB read consistency with the `MappingTemplate`:
-		// demoDS.createResolver('QueryGetDemosConsistentResolver', {
-		// 	typeName: 'Query',
-		// 	fieldName: 'getDemosConsistent',
-		// 	requestMappingTemplate: appsync.MappingTemplate.dynamoDbScanTable(true),
-		// 	responseMappingTemplate: appsync.MappingTemplate.dynamoDbResultList(),
-		// });
-
 	}
 }

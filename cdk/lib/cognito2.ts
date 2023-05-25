@@ -8,19 +8,17 @@ import * as s3 from 'aws-cdk-lib/aws-s3';
 export class Cognito2Stack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
-    // cognito
+    // Cognito user pool
     const userPool2 = new cognito.UserPool(this, 'userPool2', {
-      accountRecovery: cognito.AccountRecovery.EMAIL_ONLY,
+      accountRecovery: cognito.AccountRecovery.EMAIL_ONLY, // Email configuration used to send email
       autoVerify: { email: true, phone: false },
       email: cognito.UserPoolEmail.withSES({
        configurationSetName: cdk.Fn.importValue('ses-cfg-no-reply'),
        fromEmail: 'no-reply@webnt.dev',
        fromName: 'WebNT',
-       // replyTo:
        sesRegion: 'eu-central-1',
-       // sesVerifiedDomain:''
       }),
-      mfa: cognito.Mfa.OFF,
+      mfa: cognito.Mfa.OFF, // multi-factor authn
       passwordPolicy: {
         minLength: 6,
         requireLowercase: true,
@@ -29,61 +27,59 @@ export class Cognito2Stack extends cdk.Stack {
         requireSymbols: false,
         tempPasswordValidity: cdk.Duration.days(3),
       },
-      standardAttributes: {
+      standardAttributes: { // default set of user attributes
         email: {
           mutable: false,
           required: true,
         }
       },
-      keepOriginal: {
+      keepOriginal: { // what to do before new email/phone verification
         email: true,
       },
-      signInAliases: { email: true },
+      signInAliases: { email: true }, // what attribute can be used for sign in
       userPoolName: 'cognito2-userpool',
       signInCaseSensitive: false, // case insensitive is preferred in most situations
 
-			userVerification: {
+			userVerification: { // SignUp verification email
 				emailSubject: 'Hi, verify your email for WebNT cognito demo',
 				emailBody: 'Thanks for signing up to our awesome demo! Your verification code is {####}',
 				emailStyle: cognito.VerificationEmailStyle.CODE,
 			},
-			userInvitation: {
+			userInvitation: { // Invitation email
 				emailSubject: 'Invitation to WebNT',
 				emailBody: 'You\'ve been invited to WebNT demo with username: {username} and temporary password: {####}.',
 			},
-			selfSignUpEnabled: true,
+			selfSignUpEnabled: true, // whether users can sign up or must be created by admin
 
 
     });
 
+		// User pool client
 		const client1 = userPool2.addClient('userPool2-client1', {
 			userPoolClientName: 'userPool2-client1',
 
-			authFlows: {
+			authFlows: { // what type of pasword verification/exchange can be used
 				userPassword: true,
 				userSrp: true,
 			},
-			authSessionValidity: cdk.Duration.minutes(3),
-			preventUserExistenceErrors: true,
+			authSessionValidity: cdk.Duration.minutes(3), // validity of token during authentication process
+			preventUserExistenceErrors: true, // type of error if user does not exists in pool
 			idTokenValidity: cdk.Duration.minutes(5),
 			refreshTokenValidity: cdk.Duration.days(30),
 			accessTokenValidity: cdk.Duration.minutes(5),
 			enableTokenRevocation: true,
-
-			oAuth: {
+			oAuth: { // definition of oAuth
 				flows: {
-					authorizationCodeGrant: true,
+					authorizationCodeGrant: true, // authentication using code exchnage
 				},
-				callbackUrls: [
-					// 'https://aws-demo-cognito2.webnt.dev.test',
+				callbackUrls: [ // allowed login callback urls
 					'http://localhost:8000/',
 					'http://localhost:8000/app.html'
 				],
-				logoutUrls: [
-					// 'https://aws-demo-cognito2.webnt.dev.test',
+				logoutUrls: [ // allowed logout callback urls
 					'http://localhost:8000/'
 				],
-				scopes: [
+				scopes: [ // scopes allowed by this client
 					cognito.OAuthScope.EMAIL,
 					cognito.OAuthScope.OPENID,
 					cognito.OAuthScope.PHONE,
@@ -91,23 +87,18 @@ export class Cognito2Stack extends cdk.Stack {
 				]
 			},
 
-
-
-
-
-			supportedIdentityProviders: [
+			supportedIdentityProviders: [ // defining identity providers
 				cognito.UserPoolClientIdentityProvider.COGNITO,
-				// cognito.UserPoolClientIdentityProvider.GOOGLE,
 			],
-
-
 		});
 
+		// Hosted UI display definition
 		const cfnUserPoolUICustomizationAttachment = new cognito.CfnUserPoolUICustomizationAttachment(this, 'MyCfnUserPoolUICustomizationAttachment', {
 			clientId: client1.userPoolClientId,
 			userPoolId: userPool2.userPoolId,
 
 			// the properties below are optional
+			// content can of course be defined in separate file and loaded here using node:fs module
 			css: `
 				.background-customizable {
 					background-color: #cef5ff;
@@ -130,14 +121,18 @@ export class Cognito2Stack extends cdk.Stack {
 			`,
 		});
 
+		// Domain for user pool, since we want to use OAuth flow, we need domain to authenticate agains
 		userPool2.addDomain('userPoolDomain1', {
 			cognitoDomain: {
 				domainPrefix: 'asw-demo-cogniot2', // changed to asw, cogniot, domain cannot contain words 'AWS' 'cognito'
 			},
 		});
 
+		// well... you can set up tags
     cdk.Tags.of(userPool2).add('cost-allocation', 'test');
 
+		// outputtion of user pool ARN, it is used in ./appsync2.ts for import
+		// we want to use this user pool to authorize requests against AppSync
 		new cdk.CfnOutput(this, 'cognito2-userPool2', {
       value: userPool2.userPoolArn,
       description: 'User pool ARN',
@@ -145,12 +140,7 @@ export class Cognito2Stack extends cdk.Stack {
     });
 
 
-
-
-
-
-
-
+		// Definitions of built-in user groups in user pool
 		new cognito.CfnUserPoolGroup(this, 'userPool2AdminGroup', {
 			userPoolId: userPool2.userPoolId,
 			description: 'Admin group',
@@ -171,21 +161,30 @@ export class Cognito2Stack extends cdk.Stack {
 		});
 
 
+		// Role for entity in identity pool
+		// will be used for authenticated user
 		const authenticatedRole = new iam.Role(this, 'authRole', {
-			assumedBy: new iam.WebIdentityPrincipal('cognito-identity.amazonaws.com'),//new iam.ServicePrincipal('service.amazonaws.com'),
+			assumedBy: new iam.WebIdentityPrincipal('cognito-identity.amazonaws.com'),
 		});
+
+		// Role for entity in identity pool
+		// will be used for unauthenticated user
 		const unauthenticatedRole = new iam.Role(this, 'unauthRole', {
 			assumedBy: new iam.WebIdentityPrincipal('cognito-identity.amazonaws.com'),
 		});
 
+		// Role for entity in identity pool
+		// will be used for users in 'admin-group' group
 		const bucketForAdminRole = new iam.Role(this, 'bucketForAdminRole', {
 			assumedBy: new iam.WebIdentityPrincipal('cognito-identity.amazonaws.com'),
 		});
 
+
+		// Cognito identity pool
 		const cognitoIdP = new idp.IdentityPool(this, 'cognito2-cognitoIdP', {
 			identityPoolName: 'cognito2-cognitoIdP',
-			allowUnauthenticatedIdentities: true,
-			authenticationProviders: {
+			allowUnauthenticatedIdentities: true, // if you allow for non-authenticated user to use this identity pool
+			authenticationProviders: { // assign user pool for authentication
 				userPools: [
 					new idp.UserPoolAuthenticationProvider({
 						userPool: userPool2,
@@ -193,24 +192,26 @@ export class Cognito2Stack extends cdk.Stack {
 					}),
 				],
 			},
-			authenticatedRole: authenticatedRole,
-			unauthenticatedRole: unauthenticatedRole,
-			roleMappings: [{
-				resolveAmbiguousRoles: true,
-				providerUrl: idp.IdentityPoolProviderUrl.userPool(`cognito-idp.${this.region}.amazonaws.com/${userPool2.userPoolId}:${client1.userPoolClientId}`),
-				useToken: false,
-				mappingKey: 'cognito',
-				rules: [
+			authenticatedRole: authenticatedRole, // default role for authenticated users
+			unauthenticatedRole: unauthenticatedRole,  // role for authenticated users
+			roleMappings: [{ // how different roles shoud be assigned to identities
+				resolveAmbiguousRoles: true, // esentially use `authenticatedRole` as default, if no other applies
+				providerUrl: idp.IdentityPoolProviderUrl.userPool(`cognito-idp.${this.region}.amazonaws.com/${userPool2.userPoolId}:${client1.userPoolClientId}`), // user pool identification
+				useToken: false, // whether is role defined in cognito:roles or cognito:preferred_role in idToken/accessToken
+				mappingKey: 'cognito', // does not need to be here...
+				rules: [ // rules to apply roles
 					{
-						claim: 'cognito:groups',
-						matchType: idp.RoleMappingMatchType.CONTAINS,
-						claimValue: 'admin-group',
-						mappedRole: bucketForAdminRole,
+						claim: 'cognito:groups', // what part of token should be used to decide
+						matchType: idp.RoleMappingMatchType.CONTAINS, // how it should be evaluated
+						claimValue: 'admin-group', // what it should be evaluated against
+						mappedRole: bucketForAdminRole, // what role should be assigned
 					}
 				]
 			}]
 		});
 
+		// bucket
+		// unauth and auth users will eventually be able to access it
 		const s3a = new s3.Bucket(this, 'unauthBucket', {
 			bucketName: 'unauth-bucket',
 			cors: [{
@@ -221,11 +222,15 @@ export class Cognito2Stack extends cdk.Stack {
 
 		});
 
+		// allow access (r or r/w) to all defined roles: auth, unauth and users in 'admin-group'
+		// while users in 'admin-group' are authenticated, those are assigned theit own role
+		// `bucketForAdminRole`, so general authenticated role and this special must be assigned
 		s3a.grantRead(unauthenticatedRole);
-
 		s3a.grantReadWrite(authenticatedRole);
 		s3a.grantReadWrite(bucketForAdminRole);
 
+		// bucket
+		// only users in 'admin-group' will be able to use it
 		const s3a2 = new s3.Bucket(this, 'myOwnSecretBucket', {
 			bucketName: 'my-own-secret-bucket',
 			cors: [{
@@ -237,12 +242,8 @@ export class Cognito2Stack extends cdk.Stack {
 		});
 		s3a2.grantReadWrite(bucketForAdminRole);
 
-		// const provider = new cognito.UserPoolIdentityProviderGoogle(this, 'Google', {
-		// 	clientId: '42501478123-8glnlo0r70l96kvni73c1a8j17q6eubk.apps.googleusercontent.com',
-		// 	clientSecret: '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',
-		// 	userPool: userPool2,
-		// });
 
+		// export unauth role so it can be used in ./appsync2.ts to grant access to GraphQL queries
 		new cdk.CfnOutput(this, 'cognito2-userPool2-unauthRole', {
       value: cognitoIdP.unauthenticatedRole.roleArn,
       description: 'Ident pool unauthenticated role ARN',
