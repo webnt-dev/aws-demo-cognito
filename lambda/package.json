@@ -7,8 +7,11 @@
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "author": {
+    "name": "Bronislav Klučka",
+    "email": "Bronislav.Klucka@webnt.dev"
+  },
+  "license": "BSD-3-Clause",
   "devDependencies": {
     "@types/node": "^20.2.3",
     "eslint": "^8.41.0",

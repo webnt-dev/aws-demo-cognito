@@ -24,5 +24,11 @@
     "@aws-cdk/aws-cognito-identitypool-alpha": "^2.80.0-alpha.0",
     "constructs": "^10.0.0",
     "source-map-support": "^0.5.21"
-  }
+  },
+  "author": {
+    "name": "Bronislav Klučka",
+    "email": "Bronislav.Klucka@webnt.dev"
+  },
+  "license": "BSD-3-Clause"
+
 }

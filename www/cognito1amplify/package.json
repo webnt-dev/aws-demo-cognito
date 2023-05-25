@@ -12,8 +12,11 @@
     "start": "web-dev-server"
   },
   "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "author": {
+    "name": "Bronislav Klučka",
+    "email": "Bronislav.Klucka@webnt.dev"
+  },
+  "license": "BSD-3-Clause",
   "dependencies": {
     "aws-amplify": "^5.2.2"
   },
