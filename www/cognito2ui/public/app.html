@@ -42,6 +42,7 @@
 	<section id="appSection">
 		<a id="logoutLink" href=="#">logout</a> this is app content
 		<button id="refreshAuthToken">refreshAuthToken</button>
+		<p>There is no AWS token validation, you shoud add that.</p>
 		<main>
 			<section id="userInfo">user info</section>
 			<section id="gql">
@@ -177,9 +178,12 @@ mutation  {
 	/******************************************************/
 	/******************************************************/
 	/******************************************************/
-	// da2-jnrkahbvprcmpfwbjduy3ngaci
 
 
+	/**
+	 * get access token from storage
+	 * @returns {string}
+	 */
 	function getAccessToken() {
 		let session = window.localStorage.getItem('session') ?? null;
 		if (session) {
@@ -192,6 +196,10 @@ mutation  {
 		return '';
 	}
 
+	/**
+	 * Get auth token POST header part
+	 * @returns {string}
+	 */
 	function getAuthHeader() {
 		const authSelect = document.querySelector('#authMethod');
 		const authType = authSelect.value;
@@ -207,14 +215,10 @@ mutation  {
 		return {};
 	}
 
-/*
-				<select id="authMethod">
-					<option value="accessToken">Access token</option>
-					<option value="apiKey" data-key="da2-jnrkahbvprcmpfwbjduy3ngaci">API key</option>
-
-				</select>
-*/
-
+	/**
+	 * Send GraphQL query using access token
+	 * @returns {string}
+	 */
 	async function sendGraphQL() {
 		let accessToken = getAccessToken();
 
