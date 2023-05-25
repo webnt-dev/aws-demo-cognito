@@ -67,7 +67,7 @@ export class Cognito3Stack extends cdk.Stack {
 			oAuth: { // definition of oAuth
 				flows: {
 					authorizationCodeGrant: true, // for identification against Cognito
-					implicitCodeGrant: true // Google Auth provides tokens directly, no code
+					// implicitCodeGrant: true // Google Auth provides tokens directly, no code
 				},
 				callbackUrls: [ // allowed login callback urls
 					'http://localhost:8000/',

@@ -46,6 +46,10 @@ class AWSAuth {
 		this.#logoutUri = logoutUri;
 	}
 
+	/**
+	 * Funtion provides logout URL
+	 * @returns {string}
+	 */
 	getLogoutUrl() {
 		const authLogoutAddress = new URL(`${this.#authRootAddress}`);
 		authLogoutAddress.pathname = '/logout';
@@ -54,6 +58,10 @@ class AWSAuth {
 		return authLogoutAddress.toString();
 	}
 
+	/**
+	 * Funtion provides login URL
+	 * @returns {string}
+	 */
 	getLoginUrl() {
 		const authLoginAddress = new URL(`${this.#authRootAddress}`);
 		authLoginAddress.pathname = '/login';
