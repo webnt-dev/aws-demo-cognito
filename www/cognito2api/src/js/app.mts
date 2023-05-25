@@ -15,12 +15,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
 		event.preventDefault();
 
-		const credentials = await fromCognitoIdentityPool({
-			identityPoolId: 'eu-central-1:a1793a14-07f0-441e-9ae3-0398f05d9232',
-			clientConfig: {
-				region: 'eu-central-1'
-			}
-		})();
+		const logDiv = document.querySelector('#log')!;
+		logDiv.textContent = '';
 
 		const query = `#graphql
 			query MyQuery {
@@ -36,6 +32,21 @@ document.addEventListener('DOMContentLoaded', () => {
 			}
 		`;
 
+		logDiv.textContent += 'UNAUTH USER --------------------------------------------\n';
+		logDiv.textContent += 'UNAUTH USER credentials --------------------------------------------\n';
+
+
+		// Get credentials for unauth user
+		const credentials = await fromCognitoIdentityPool({
+			identityPoolId: 'eu-central-1:a1793a14-07f0-441e-9ae3-0398f05d9232',
+			clientConfig: {
+				region: 'eu-central-1'
+			}
+		})();
+		logDiv.textContent += JSON.stringify(credentials, null, 2);
+
+		logDiv.textContent += '\nUNAUTH USER graphql --------------------------------------------\n';
+		// create request signature service based on IAM
 		const sign = new SignatureV4({
 			credentials,
 			region: 'eu-central-1',
@@ -43,6 +54,8 @@ document.addEventListener('DOMContentLoaded', () => {
 			sha256: Sha256
 		});
 		const apiUrl = new URL('https://3mrsdwetsraxpdofigdt7xs4bm.appsync-api.eu-central-1.amazonaws.com/graphql');
+
+		// create HTTP request signature
 		const signature = await sign.sign({
 			method: 'POST',
 			hostname: apiUrl.host,
@@ -57,8 +70,8 @@ document.addEventListener('DOMContentLoaded', () => {
 			})
 		});
 		console.log(signature);
-		const logDiv = document.querySelector('#log')!;
 
+		// POST GraphQL request signed by signature
 		const result = await fetch(apiUrl.toString(), {
 			method: 'POST',
 			headers: {
@@ -69,22 +82,28 @@ document.addEventListener('DOMContentLoaded', () => {
 			}),
 		});
 
-		logDiv.textContent = JSON.stringify(await result.json(), null, 2);
+		logDiv.textContent += JSON.stringify(await result.json(), null, 2);
 
-		logDiv.textContent += '--------------------------------------------';
-
+		// Access bucket with unauth credential
+		// unauth-bucket shoud be read only for unauth user
 		const s3u = new S3({
 			credentials,
 			region: 'eu-central-1',
 		});
 
+
+		logDiv.textContent += '\nUNAUTH USER S3 unauth bucket LIST --------------------------------------------\n';
+
+		// try listing objects, should be OK
 		const res1 = await s3u.listObjects({
 			Bucket: 'unauth-bucket',
 		});
 
 		logDiv.textContent += JSON.stringify(res1, null, 2);
 
+		logDiv.textContent += '\nUNAUTH USER S3 unauth bucket PUT --------------------------------------------\n';
 		try {
+			// try putting object, should fail
 			const res2 = await s3u.putObject({
 				Bucket: 'unauth-bucket',
 				Key: 'unauthTest.txt',
@@ -97,7 +116,7 @@ document.addEventListener('DOMContentLoaded', () => {
 			logDiv.textContent += JSON.stringify(e, null, 2);
 		}
 
-		logDiv.textContent += '--------------------------------------------';
+		logDiv.textContent += '\nAUTH USER --------------------------------------------\n';
 
 
 		const userPoolId = 'eu-central-1_akJtEQL0U';
@@ -108,7 +127,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 		const client = new CognitoIdentityProvider({ region: 'eu-central-1' });
 
-		// PLAIN PASSWORD
+		// login with PLAIN PASSWORD
 		try {
 			const res3 = await client.initiateAuth({
 				AuthFlow: AuthFlowType.USER_PASSWORD_AUTH,
@@ -118,12 +137,17 @@ document.addEventListener('DOMContentLoaded', () => {
 					PASSWORD: password,
 				}
 			});
+			logDiv.textContent += '\nAUTH USER login --------------------------------------------\n';
 			logDiv.textContent += JSON.stringify(res3, null, 2);
+			logDiv.textContent += '\nAUTH USER user --------------------------------------------\n';
+
+			// get user info
 			const user = await client.getUser({
 				AccessToken: res3.AuthenticationResult!.AccessToken
 			});
 			logDiv.textContent += JSON.stringify(user, null, 2);
 
+			// get credentials for logged  in user
 			const credentials2 = await fromCognitoIdentityPool({
 				identityPoolId: 'eu-central-1:a1793a14-07f0-441e-9ae3-0398f05d9232',
 				clientConfig: {
@@ -133,46 +157,61 @@ document.addEventListener('DOMContentLoaded', () => {
 					[`cognito-idp.eu-central-1.amazonaws.com/${userPoolId}`]: res3.AuthenticationResult!.IdToken!,
 				},
 			})();
+
+			logDiv.textContent += '\nAUTH USER credentials --------------------------------------------\n';
 			logDiv.textContent += JSON.stringify(credentials2, null, 2);
 
-
+			// Access bucket with auth credential
+			// unauth-bucket shoud be read/write for auth users
 			const s3a = new S3({
 				credentials: credentials2,
 				region: 'eu-central-1',
 			});
 
+			// list objects, should be OK for all auth users
 			const res2 = await s3a.listObjects({
 				Bucket: 'unauth-bucket',
 			});
 
+			logDiv.textContent += '\nAUTH USER S3 unauth bucket LIST --------------------------------------------\n';
 			logDiv.textContent += JSON.stringify(res2, null, 2);
 
+
+			// PUT object, should be OK for all auth users
 			const res5 = await s3a.putObject({
 				Bucket: 'unauth-bucket',
 				Key: `unauthTest-${(new Date()).getTime()}.txt`,
 				Body: 'This is unauth test',
 			});
 
+			logDiv.textContent += '\nAUTH USER S3 unauth bucket PUT --------------------------------------------\n';
 			logDiv.textContent += JSON.stringify(res5, null, 2);
 
+			// list objects, should be OK for all auth users
 			const res6 = await s3a.listObjects({
 				Bucket: 'unauth-bucket',
 			});
 
+			logDiv.textContent += '\nAUTH USER S3 unauth bucket LIST --------------------------------------------\n';
 			logDiv.textContent += JSON.stringify(res6, null, 2);
 
-			logDiv.textContent += '--------------------------------------------';
-
+			// Access bucket with auth credential
+			// my-own-secret-bucket shoud be read/write only for admin-group
 			const s3m1 = new S3({
 				credentials: credentials2,
 				region: 'eu-central-1',
 			});
 
-			const res7 = await s3m1.listObjects({
-				Bucket: 'my-own-secret-bucket',
-			});
-
-			logDiv.textContent += JSON.stringify(res7, null, 2);
+			// list objects, should be OK only for admin-group users
+			logDiv.textContent += '\nAUTH USER S3 secret bucket LIST --------------------------------------------\n';
+			try {
+				const res7 = await s3m1.listObjects({
+					Bucket: 'my-own-secret-bucket',
+				});
+				logDiv.textContent += JSON.stringify(res7, null, 2);
+			} catch (e) {
+				logDiv.textContent += JSON.stringify(e, null, 2);
+			}
 
 		} catch (e) {
 			logDiv.textContent += JSON.stringify(e, null, 2);

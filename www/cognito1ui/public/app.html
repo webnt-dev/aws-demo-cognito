@@ -42,6 +42,7 @@
 	<section id="appSection">
 		<a id="logoutLink" href=="#">logout</a> this is app content
 		<button id="refreshAuthToken">refreshAuthToken</button>
+		<p>There is no AWS token validation, you shoud add that.</p>
 		<main>
 			<section id="userInfo">user info</section>
 			<section id="gql">
@@ -74,7 +75,7 @@
 			localStorage.removeItem('session'); // on logout link click, clear storage
 		});
 
-		// refresh auth token nad store it in
+		// refresh auth token and store it in
 		document.querySelector('#refreshAuthToken').addEventListener('click', async () => {
 			let session = window.localStorage.getItem('session') ?? null;
 			if (session) {
@@ -153,6 +154,10 @@
 	}
 
 
+	/**
+	 * get access token from storage
+	 * @returns {string}
+	 */
 	function getAccessToken() {
 		let session = window.localStorage.getItem('session') ?? null;
 		if (session) {
@@ -165,9 +170,12 @@
 		return '';
 	}
 
+	/**
+	 * Send GraphQL query using access token
+	 * @returns {string}
+	 */
 	async function sendGraphQL() {
 		let accessToken = getAccessToken();
-
 
 		const query = document.querySelector('#gqlText').value;
 		const result = await fetch('https://7tlgtnm4pbbatiuznn6xtdbbhe.appsync-api.eu-central-1.amazonaws.com/graphql', {

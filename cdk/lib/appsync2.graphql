@@ -9,8 +9,8 @@ type Demo @aws_api_key @aws_iam @aws_cognito_user_pools {
 type Query {
 	getDemos: [ Demo! ] @aws_iam @aws_cognito_user_pools
 
-	# can be called by any user and by API key
-	getDemo(id: String!): Demo @aws_api_key @aws_cognito_user_pools
+	# can be called by any user and by API key and by IAM
+	getDemo(id: String!): Demo @aws_iam @aws_api_key @aws_cognito_user_pools
 }
 
 input DemoInput {
