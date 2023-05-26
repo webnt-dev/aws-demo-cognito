@@ -38,7 +38,7 @@ Definition of AppSync stack:
 * Resolvers for AppSync to communicate with DynamoDB
 * allowing imported unauth role from Cognito to call `getDemos` function
 
-Deploy as `npx aws-cdk deploy AppSync1` / `cdk deploy AppSync1`.
+Deploy as `npx aws-cdk deploy AppSync2` / `cdk deploy AppSync2`.
 
 ## WWW - Cognito UI demo
 
