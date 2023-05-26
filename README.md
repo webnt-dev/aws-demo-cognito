@@ -1,8 +1,8 @@
 # Introduction
 
-Project contains several demo application showcasing use of AWS Cognito service.
+Project contains several demo applications showcasing use of AWS Cognito service.
 
-## Prerequisities
+## Prerequisites
 1. AWS account (with ability to install CloudFormation)
 2. [AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-welcome.html) connected to that account
 3. Node 18 (or above)
@@ -11,10 +11,12 @@ Project uses [AWS CDK](https://docs.aws.amazon.com/cdk/api/v2/) for CloudFormati
 
 # Content
 
-Project contains definition of AWS SES (Simple Email service) you need to be able to send emails to Cognito users. SES must be set up before any other stack.
+Project contains the definition of AWS SES (Simple Email service). You need to be able to send emails to Cognito users. SES must be set up before any other stack.
 Please update SES settings to contain your own identities.
 
 ## User pool demo
+
+Basic user pool demo.
 
 ### CDK
 * Cognito user pool and client setup
@@ -31,10 +33,13 @@ Please update SES settings to contain your own identities.
 
 ## Identity pool demo
 
+Basic identity pool demo.
+
 ### CDK
 * Cognito user pool and client setup 
   * with groups
   * with UI customization
+* S3 buckets
 * AppSync/GraphQL setup
 * DynamoDB setup
 * Identity pool setup with roles (auth, unauth, admin-like)
@@ -50,9 +55,30 @@ Please update SES settings to contain your own identities.
 
 ## Federated identity provider demo
 
+Adding SSO (single/social sign on) Google login button.
+
+### CDK
+* Cognito user pool and client setup 
+  * with Google as federated provider (Google SSO login button)
+
+### WWW
+* using User pool from AWS hosted UI
+ * with Google login button
+
 [Federated demo readme](./doc/federated.md)
 
 ## Cognito triggers demo
+
+Using triggers to modify Cognito actions (after sign up, user migration).
+
+### CDK
+* Lambda definitions
+* Cognito user pool and client setup 
+  * with groups
+  * action triggers (Lambda) for signing up and user migration
+
+### WWW
+* using User pool from AWS hosted UI
 
 [Triggers demo readme](./doc/triggers.md)
 
