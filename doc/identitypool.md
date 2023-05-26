@@ -73,3 +73,7 @@ Auth users can or cannot list items in the secret bucket, based on the group use
 Identity credentials are retrieved from identity pool and used either to
 * sign HTTP request against AWS source
 * or as credentials to access AWS source using API
+
+Build: `npm run all`.
+
+Run: `npm run start`.
