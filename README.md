@@ -40,7 +40,7 @@ Basic user pool demo.
 Basic identity pool demo.
 
 ### CDK
-* Cognito user pool and client setup 
+* Cognito user pool and client setup
   * with groups
   * with UI customization
 * S3 buckets
@@ -62,7 +62,7 @@ Basic identity pool demo.
 Adding SSO (single/social sign on) Google login button.
 
 ### CDK
-* Cognito user pool and client setup 
+* Cognito user pool and client setup
   * with Google as federated provider (Google SSO login button)
 
 ### WWW
@@ -77,7 +77,7 @@ Using triggers to modify Cognito actions (after sign up, user migration).
 
 ### CDK
 * Lambda definitions
-* Cognito user pool and client setup 
+* Cognito user pool and client setup
   * with groups
   * action triggers (Lambda) for signing up and user migration
 
@@ -89,8 +89,15 @@ Using triggers to modify Cognito actions (after sign up, user migration).
 ## ChangeLog
 Any missing version means mostly documentation fixes.
 
+
+### version 1.0.0
+2023-05-26
+```
++ project documentation
+```
+
 ### version 0.9.0
-2023-05-05
+2023-05-25
 ```
 + code documented
 ```
