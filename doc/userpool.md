@@ -52,3 +52,12 @@ Demo is showcasing both plain text method or SRP method for authentication
 Build: `npm run all`
 
 Run: `npm run start`.
+
+## WWW - Amplify demo
+`www\cognito1amplify`
+
+Demo using AWS Amplify for User pool authentication and sign out.
+
+Build: `npm run all`
+
+Run: `npm run start`.
