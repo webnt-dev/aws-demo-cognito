@@ -11,8 +11,12 @@ Project uses [AWS CDK](https://docs.aws.amazon.com/cdk/api/v2/) for CloudFormati
 
 # Content
 
+## SES
+
 Project contains the definition of AWS SES (Simple Email service). You need to be able to send emails to Cognito users. SES must be set up before any other stack.
 Please update SES settings to contain your own identities.
+
+Deploy as `npx aws-cdk deploy Ses` / `cdk deploy Ses`
 
 ## User pool demo
 
