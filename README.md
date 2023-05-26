@@ -16,9 +16,15 @@ Please update SES settings to contain your own identities.
 
 ## User pool demo
 
+### CDK
 * basic Cognito user pool setup
 * basic AppSync/GraphQL pool setup
-* 
+
+### WWW
+* using User pool from AWS hosted UI (login, registration, etc.) using oAuth
+* GraphQL demo, accessible only to Cognito users
+* using User pool from AWS Cognito API (login, logout)
+* using User pool from AWS Amplify library (login, logout)
 
 [User pool demo readme](./doc/userpool.md)
 
