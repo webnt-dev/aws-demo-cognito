@@ -30,7 +30,7 @@ Deploy as `npx aws-cdk deploy AppSync1` / `cdk deploy AppSync1`.
 ## WWW - Hosted UI demo
 `www\cognito1ui`
 
-Demo using oAuth as auth flow for using User pool for authentication.
+Demo using oAuth as auth flow for User pool authentication.
 
 After authentication you can
 * view logged in user
@@ -39,5 +39,16 @@ After authentication you can
 * logout
 
 Build: no build required
+
+Run: `npm run start`.
+
+## WWW - Cognito API demo
+`www\cognito1api`
+
+Demo using AWS Cognito API for User pool authentication.
+
+Demo is showcasing both plain text method or SRP method for authentication
+
+Build: `npm run all`
 
 Run: `npm run start`.
