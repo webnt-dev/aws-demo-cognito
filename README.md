@@ -89,7 +89,6 @@ Using triggers to modify Cognito actions (after sign up, user migration).
 ## ChangeLog
 Any missing version means mostly documentation fixes.
 
-
 ### version 1.0.0
 2023-05-26
 ```
