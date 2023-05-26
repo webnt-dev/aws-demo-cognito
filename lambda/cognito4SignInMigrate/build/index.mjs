@@ -42,5 +42,6 @@ export const handler = async (event) => {
         event.response.finalUserStatus = 'CONFIRMED';
         event.response.messageAction = 'SUPPRESS';
     }
+    console.log(JSON.stringify(event));
     return event;
 };

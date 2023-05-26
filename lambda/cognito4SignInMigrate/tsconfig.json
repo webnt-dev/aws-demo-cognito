@@ -23,13 +23,7 @@
     "noImplicitOverride": true,
 
 		"skipLibCheck": true,
-		"esModuleInterop": true,
-    "paths": {
-      "types/*": [
-        "./@types/*"
-      ]
-    }
-
+		"esModuleInterop": true
   },
   "include": ["src/**/*.ts", "src/**/*.mts", "src/**/*.js", "src/**/*.mjs"],
   "exclude": ["./rollup.config.js", "src/**/*.jsr"]

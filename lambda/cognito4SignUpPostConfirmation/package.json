@@ -4,8 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "all": "eslint --fix -c .eslintrc ./src/**/*.mts && tsc",
-    "lint": "eslint --fix -c .eslintrc  ./src/**/*.mts  ",
+    "all": "eslint --fix -c .eslintrc --parser-options tsconfigRootDir: ./src/**/*.mts && tsc",
+    "lint": "eslint --fix -c .eslintrc --parser-options tsconfigRootDir:  ./src/**/*.mts  ",
     "build": "tsc",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
