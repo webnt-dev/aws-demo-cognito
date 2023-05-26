@@ -17,18 +17,34 @@ Please update SES settings to contain your own identities.
 ## User pool demo
 
 ### CDK
-* basic Cognito user pool setup
-* basic AppSync/GraphQL pool setup
+* Cognito user pool and client setup
+* AppSync/GraphQL setup
+* DynamoDB setup
 
 ### WWW
 * using User pool from AWS hosted UI (login, registration, etc.) using oAuth
-* GraphQL demo, accessible only to Cognito users
+  * GraphQL demo, accessible only to Cognito users
 * using User pool from AWS Cognito API (login, logout)
 * using User pool from AWS Amplify library (login, logout)
 
 [User pool demo readme](./doc/userpool.md)
 
 ## Identity pool demo
+
+### CDK
+* Cognito user pool and client setup 
+  * with groups
+  * with UI customization
+* AppSync/GraphQL setup
+* DynamoDB setup
+* Identity pool setup with roles (auth, unauth, admin-like)
+
+### WWW
+* using User pool from AWS hosted UI
+  * GraphQL demo showcasing use of User pool groups and additional auth methods
+* using User pool from Cognito API
+  * accessing GraphQL from unauth user
+  * accessing AWS resources (S3) directly from web page using roles defined in identity pool
 
 [Identity pool demo readme](./doc/identitypool.md)
 
