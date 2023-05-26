@@ -7,26 +7,23 @@ export class SesStack extends cdk.Stack {
     super(scope, id, props);
 
 		const noReplyCfg = new ses.ConfigurationSet(this, 'no-reply', {
-			// customTrackingRedirectDomain: 'track.cdk.dev',
-			// suppressionReasons: ses.SuppressionReasons.COMPLAINTS_ONLY,
-			// tlsPolicy: ses.ConfigurationSetTlsPolicy.REQUIRE,
-			// dedicatedIpPool: myPool,
 		});
 
+		// define whole domain as SES identity
 		const identityDomain = new ses.EmailIdentity(this, 'Identity', {
-			identity: ses.Identity.domain('webnt.dev'),
+			identity: ses.Identity.domain('webnt.dev'), // please replace with your own domain identity
 		});
 
 		for (const record of identityDomain.dkimRecords) {
 			// create CNAME records using `record.name` and `record.value`
-
 		}
 
+		// define email as SES identity
 		const identityEmail = new ses.EmailIdentity(this, 'IdentityMail-NoReply', {
 			identity: ses.Identity.email('no-reply@webnt.dev'),
-			// mailFromDomain:
 		});
 
+		// define output that can be used by different stacks
 		new cdk.CfnOutput(this, 'ses-cfg-no-reply', {
       value: noReplyCfg.configurationSetName,
       description: 'The name of the config property',
